@@ -4,9 +4,9 @@ using System.Text;
 
 namespace FFEyeshot.Common
 {
-    public interface ITransformable
+    public interface INotifyTransformation
     {
-        void NotifyTransformation(object sender, TransformationEventArgs data);
+        event TransformationEventHandler OnTransforming;
     }
 
     public interface INotifyEntityChanged

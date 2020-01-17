@@ -18,10 +18,8 @@ namespace FFEyeshot.Common
             {
                 throw new ArgumentNullException(nameof(pnt));
             }
-            var projected = me.Project(pnt);
-            var ret = me.PointAt(projected);
 
-            return ret;
+            return me.PointAt(me.Project(pnt));
         }
     }
 }

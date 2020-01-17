@@ -10,7 +10,7 @@ namespace FFEyeshot.Common
 
         public TransformationEventArgs(devDept.Geometry.Transformation xform)
         {
-            this.Xform = Xform;
+            this.Xform = xform;
         }
     }
 

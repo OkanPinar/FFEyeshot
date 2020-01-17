@@ -17,6 +17,8 @@ namespace FFEyeshot.ViewLay.ThreeD
 
             this.SelectionFilterMode = selectionFilterType.Entity;
             this.IsInFrustumMode = Camera.perspectiveFitType.Accurate;
+
+            this.SelectionColor = System.Drawing.Color.GreenYellow;
         }
 
         public override void EndInit()

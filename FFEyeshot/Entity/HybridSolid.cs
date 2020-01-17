@@ -14,13 +14,15 @@ namespace FFEyeshot.Entity
     [Serializable]
     public class HybridSolid : Solid
     {
+        public object Parent { get; set; }
+
         public Point3D[] wireVertices { get; set; }
 
         private EntityGraphicsData wireGraphicsData = new EntityGraphicsData();
 
         public HybridSolid(): base()
         { 
-
+            
         }
 
         public HybridSolid(HybridSolid another): base(another)
@@ -116,7 +118,6 @@ namespace FFEyeshot.Entity
                 base.DrawHiddenLines(data);
         }
 
-
         protected override void DrawNormals(DrawParams data)
         {
             if (entityNature != entityNatureType.Wire)
@@ -128,7 +129,6 @@ namespace FFEyeshot.Entity
             if (entityNature != entityNatureType.Wire)
                 base.DrawSilhouettes(drawSilhouettesParams);
         }
-
 
         protected override void DrawWireframe(DrawParams drawParams)
         {
@@ -193,7 +193,6 @@ namespace FFEyeshot.Entity
 
             return base.AllVerticesInFrustum(data);
         }
-
 
         protected override bool ComputeBoundingBox(TraversalParams data, out Point3D boxMin, out Point3D boxMax)
         {

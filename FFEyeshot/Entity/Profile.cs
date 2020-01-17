@@ -19,8 +19,6 @@ namespace FFEyeshot.Entity
         public Plane depthFront { get; set; }
         public Plane depthBehind { get; set; }
 
-       
-
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string prop)
         {
@@ -432,12 +430,12 @@ namespace FFEyeshot.Entity
 
         }
 
-        public Profile(devDept.Eyeshot.Entities.Region crossSection, PointT startPoint, PointT endPoint)
+        public Profile(devDept.Eyeshot.Entities.Region crossSection, devDept.Geometry.Segment3D refLine)
         {
             this._crossSection = crossSection;
-            this.StartPoint = startPoint;
-            this.EndPoint = endPoint;
-            this.ReferanceLine = new Line(startPoint, endPoint);
+            this.StartPoint = new PointT(refLine.P0);
+            this.EndPoint = new PointT(refLine.P1);
+            this.ReferanceLine = new Line(refLine);
             this.InitVectors();
             this.InitView();
             this.InitPlanes();
@@ -562,6 +560,8 @@ namespace FFEyeshot.Entity
             View.wireVertices = wirePnts.ToArray();
             
             View.TransformBy(transformation);
+
+            View.Parent = this;
         }
 
         public void InitPlanes()
@@ -599,7 +599,7 @@ namespace FFEyeshot.Entity
             }
         }
 
-        private void RefreshView()
+        public void RefreshView()
         {
             var v_lcr = new Vector3D(pAllign, _currentLCRPlane.ProjectAt(pAllign));
             var v_depth = new Vector3D(pAllign, _currentDepthPlane.ProjectAt(pAllign));
@@ -621,5 +621,592 @@ namespace FFEyeshot.Entity
             OnEntityChanging?.Invoke(this.View, null);
         }
     
+    }
+
+    [Serializable]
+    [Xceed.Wpf.Toolkit.PropertyGrid.Attributes.ExpandableObject]
+    public class ProfilePosition2 : INotifyPropertyChanged
+    {
+        public Profile2 Parent { get; set; }
+
+        public Plane lcrMiddle { get; set; }
+        public Plane lcrLeft { get; set; }
+        public Plane lcrRight { get; set; }
+        public Plane depthMiddle { get; set; }
+        public Plane depthFront { get; set; }
+        public Plane depthBehind { get; set; }
+
+        /// <summary>
+        /// Direction vector of the profile
+        /// </summary>
+        public Vector3D V1 { get; private set; }
+        /// <summary>
+        /// Default weak axis vector of the profile
+        /// </summary>
+        public Vector3D V2 { get; private set; }
+        /// <summary>
+        /// Default strong axis vector of the profile
+        /// </summary>
+        public Vector3D V3 { get; private set; }
+
+        /// <summary>
+        /// Rotated weak axis vector of the profile
+        /// </summary>
+        public Vector3D V2_curr { get; private set; }
+        /// <summary>
+        /// Rotated weak axis vector of the profile
+        /// </summary>
+        public Vector3D V3_curr { get; private set; }
+
+        /// <summary>
+        /// Start point of the profile
+        /// </summary>
+        public Point3D StartPoint { get; private set; }
+        /// <summary>
+        /// End point of the profile
+        /// </summary>
+        public Point3D EndPoint { get; private set; }
+        /// <summary>
+        /// Middle point of the referance line
+        /// </summary>
+        public Point3D MiddlePoint { get; private set; }
+        /// <summary>
+        /// Align point for the cross-section
+        /// TODO: Notify transportation shoul be implemented.
+        /// </summary>
+        public PointT pAllign { get; private set; }
+
+        /// <summary>
+        /// Current selected depth plane getter according to Depth property.
+        /// </summary>
+        private Plane _currentDepthPlane
+        {
+            get
+            {
+                switch (Depth)
+                {
+                    case AtDepth.BEHIND:
+                        return depthBehind;
+                    case AtDepth.MIDDLE:
+                        return depthMiddle;
+                    case AtDepth.FRONT:
+                        return depthFront;
+                    default:
+                        return null;
+                }
+            }
+        }
+        /// <summary>
+        /// Current selected depth plane setter for change notification.
+        /// </summary>
+        public Plane CurrentDepthPlane
+        {
+            get { return _currentDepthPlane; }
+            set
+            {
+                if (value != _currentDepthPlane)
+                {
+                    var projected = value.ProjectAt(pAllign);
+                    var t = new Translation(new Vector3D(pAllign, projected));
+                    pAllign.TransformBy(t);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Current selected lcr plane getter according to LCR property.
+        /// </summary>
+        public Plane _currentLCRPlane
+        {
+            get
+            {
+                switch (LCR)
+                {
+                    case OnLCR.MIDDLE:
+                        return lcrMiddle;
+                    case OnLCR.LEFT:
+                        return lcrLeft;
+                    case OnLCR.RIGHT:
+                        return lcrRight;
+                    default:
+                        return null;
+                }
+            }
+        }
+        /// <summary>
+        /// Current selected lcr plane setter for change notification.
+        /// </summary>
+        public Plane CurrentLCRPlane
+        {
+            get { return _currentLCRPlane; }
+            set
+            {
+                if (_currentLCRPlane != value)
+                {
+                    var t = new Translation(new Vector3D(pAllign, value.ProjectAt(pAllign)));
+                    pAllign.TransformBy(t);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private field for lcr property.
+        /// TODO: Add a default value provider for this property.
+        /// </summary>
+        private OnLCR _lcr = OnLCR.MIDDLE;
+        /// <summary>
+        /// (L)eft-(C)enter-(R)ight property. 
+        /// Describe of the position of cross-section at V3 direction.
+        /// </summary>
+        public OnLCR LCR
+        {
+            get { return _lcr; }
+            set
+            {
+                if (_lcr != value)
+                {
+                    switch (value)
+                    {
+                        case OnLCR.MIDDLE:
+                            CurrentLCRPlane = lcrMiddle;
+                            break;
+                        case OnLCR.LEFT:
+                            CurrentLCRPlane = lcrLeft;
+                            break;
+                        case OnLCR.RIGHT:
+                            CurrentLCRPlane = lcrRight;
+                            break;
+                        default:
+                            break;
+                    }
+                    _lcr = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private field for depth property.
+        /// TODO: Add a default value provider for this property.
+        /// </summary>
+        private AtDepth _depth = AtDepth.MIDDLE;
+        /// <summary>
+        /// Describe of the position of the cross-section at V2 direction
+        /// </summary>
+        public AtDepth Depth
+        {
+            get { return _depth; }
+            set
+            {
+                if (value != _depth)
+                {
+                    switch (value)
+                    {
+                        case AtDepth.MIDDLE:
+                            this.CurrentDepthPlane = depthMiddle;
+                            break;
+                        case AtDepth.FRONT:
+                            this.CurrentDepthPlane = depthFront;
+                            break;
+                        case AtDepth.BEHIND:
+                            this.CurrentDepthPlane = depthBehind;
+                            break;
+                        default:
+                            break;
+                    }
+                    _depth = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private field for rotation property.
+        /// TODO: Add a default value provider for this property.
+        /// </summary>
+        private OnRotation _rotation = OnRotation.TOP;
+        /// <summary>
+        /// Describe of the orientation of the cross-section
+        /// </summary>
+        public OnRotation Rotation
+        {
+            get { return _rotation; }
+            set
+            {
+                if (_rotation != value)
+                {
+                    switch (value)
+                    {
+                        case OnRotation.TOP:
+                            SectionRotation = 0.0 + RotationOffset;
+                            break;
+                        case OnRotation.FRONT:
+                            SectionRotation = 90 + RotationOffset;
+                            break;
+                        case OnRotation.BACK:
+                            SectionRotation = 270 + RotationOffset;
+                            break;
+                        case OnRotation.BELOW:
+                            SectionRotation = 180 + RotationOffset;
+                            break;
+                        default:
+                            break;
+                    }
+                    _rotation = value;
+                    InitPlanes(Parent.SectionWidth, Parent.SectionHeight);
+                    Parent.RefreshView();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private field for lcrOffset property.
+        /// TODO: Add a default value provider for this property.
+        /// </summary>
+        private double _lcrOffset = 0.0;
+        /// <summary>
+        /// Offset amount for LCR property. 
+        /// In left and middle option cross-section is moving direction at V3.
+        /// In rigth option cross section is moving direction at -V3.
+        /// </summary>
+        public double LCROffset
+        {
+            get
+            {
+                return _lcrOffset;
+            }
+
+            set
+            {
+                if (_lcrOffset != value)
+                {
+                    lcrLeft.Translate((value - _lcrOffset) * lcrLeft.AxisZ);
+                    lcrMiddle.Translate((value - _lcrOffset) * lcrMiddle.AxisZ);
+                    lcrRight.Translate((value - _lcrOffset) * lcrRight.AxisZ);
+                    var t = new Translation(new Vector3D(pAllign, CurrentLCRPlane.ProjectAt(pAllign)));
+                    pAllign.TransformBy(t);
+                    _lcrOffset = value;
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Private field for depth offset property.
+        ///  TODO: Add a default value provider for this property.
+        /// </summary>
+        private double _depthOffset = 0.0;
+        /// <summary>
+        /// Offset amount for Depth property. 
+        /// In Front and Middle option cross-section is moving direction at V2.
+        /// In Behind option cross section is moving direction at -V2.
+        /// </summary>
+        public double DepthOffset
+        {
+            get
+            {
+                return _depthOffset;
+            }
+
+            set
+            {
+                if (_depthOffset != value)
+                {
+                    depthBehind.Translate((value - _depthOffset) * depthBehind.AxisZ);
+                    depthMiddle.Translate((value - _depthOffset) * depthMiddle.AxisZ);
+                    depthFront.Translate((value - _depthOffset) * depthFront.AxisZ);
+                    var t = new Translation(new Vector3D(pAllign, CurrentDepthPlane.ProjectAt(pAllign)));
+                    pAllign.TransformBy(t);
+                    _depthOffset = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Private field for rotation offset property.
+        /// TODO: Add a default value provider for this property.
+        /// </summary>
+        private double _rotationOffset = 0;
+        /// <summary>
+        /// Offset amount of the Rotation property.
+        /// It rotate cross-section around V1
+        /// </summary>
+        public double RotationOffset
+        {
+            get
+            {
+                return _rotationOffset;
+            }
+
+            set
+            {
+                if (_rotationOffset != value)
+                {
+                    Transformation t = new Transformation();
+                    double angle = Math.PI * (value - _rotationOffset) / 180.0;
+                    t.Rotation(angle, V1, pAllign);
+                    V2_curr.TransformBy(t);
+                    V3_curr.TransformBy(t);
+                    this.SectionRotation += (value - _rotationOffset);
+                    _rotationOffset = value;
+                    InitPlanes(Parent.SectionWidth, Parent.SectionHeight);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Storage for value of the rotation information of the cross-section.
+        /// </summary>
+        private double _sectionRotation = 0;
+        /// <summary>
+        /// Adjustment for proper rotation around V1 vector.
+        /// </summary>
+        public double SectionRotation
+        {
+            get { return _sectionRotation; }
+            set
+            {
+                if (_sectionRotation != value)
+                {
+                    var t = new Transformation();
+                    var angle = Math.PI * (value - _sectionRotation) / 180;
+                    t.Rotation(angle, V1, pAllign);
+                    Parent.View.TransformBy(t);
+                    Parent.NotifyEntityChanged();
+                    _sectionRotation = value;
+                }
+            }
+        }
+
+        public void InitPlanes(double sectionWidth, double sectionHeight)
+        {
+            var vectors = this.GetInitVectors();
+
+            switch (Rotation)
+            {
+                case OnRotation.TOP:
+                case OnRotation.BELOW:
+                    {
+                        lcrLeft = new Plane(EndPoint + V3 * sectionWidth * .5 + V3 * _lcrOffset, V3_curr);
+                        lcrMiddle = new Plane(EndPoint + V3 * _lcrOffset, V3_curr);
+                        lcrRight = new Plane(EndPoint - V3 * sectionWidth * .5 + V3 * _lcrOffset, -1.0 * V3_curr);
+
+                        depthBehind = new Plane(EndPoint - V2 * sectionHeight * .5 - V2 * _depthOffset, -1.0 * V2_curr);
+                        depthMiddle = new Plane(EndPoint + V2 * _depthOffset, V2_curr);
+                        depthFront = new Plane(EndPoint + V2 * sectionHeight * .5 + V2 * _depthOffset, V2_curr);
+                    }
+                    break;
+                case OnRotation.FRONT:
+                case OnRotation.BACK:
+                    {
+                        lcrLeft = new Plane(EndPoint + V3 * sectionHeight * .5 + V3 * _lcrOffset, V3_curr);
+                        lcrMiddle = new Plane(EndPoint + V3 * _lcrOffset, V3_curr);
+                        lcrRight = new Plane(EndPoint - V3 * sectionHeight * .5 + V3 * _lcrOffset, -1.0 * V3_curr);
+
+                        depthBehind = new Plane(EndPoint - V2 * sectionWidth * .5 + V2 * _depthOffset, -1.0 * V2_curr);
+                        depthMiddle = new Plane(EndPoint + V2 * _lcrOffset, V2_curr);
+                        depthFront = new Plane(EndPoint + V2 * sectionWidth * .5 + V2 * _depthOffset, V2_curr);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public ProfilePosition2()
+        {
+
+        }
+
+        public ProfilePosition2(Point3D startPoint, Point3D endPoint)
+        {
+            this.StartPoint = startPoint;
+            this.EndPoint = endPoint;
+            this.InitVectors();
+        }
+
+        private void InitVectors()
+        {
+            var vectors = this.GetInitVectors();
+
+            this.V1 = vectors[0];
+            this.V2 = vectors[1];
+            this.V3 = vectors[2];
+
+            this.V2_curr = vectors[1];
+            this.V3_curr = vectors[2];
+
+            this.pAllign = new PointT(EndPoint);
+        }
+
+        public Vector3D[] GetInitVectors()
+        {
+            Vector3D v1, v2, v3;
+            v1 = new Vector3D(StartPoint, EndPoint);
+            v1.Normalize();
+            MiddlePoint = (StartPoint + EndPoint) / 2.0;
+
+            if (Math.Abs(Vector3D.Dot(v1, Vector3D.AxisZ)) < 0.998)
+            {
+                v3 = Vector3D.Cross(v1, Vector3D.AxisZ);
+                v3.Normalize();
+
+                v2 = Vector3D.Cross(v3, v1);
+                v2.Normalize();
+            }
+
+            else
+            {
+                v2 = Vector3D.AxisY;
+                v3 = Vector3D.Cross(v1, v2);
+                v3.Normalize();
+            }
+
+            return new Vector3D[] { v1, v2, v3 };
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string prop)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+    }
+
+    [Serializable]
+    public class Profile2: INotifyEntityChanged
+    {
+        #region Properties
+        private Region _crossSection;
+
+        public event EntityChangingEventHandler OnEntityChanging;
+
+        /// <summary>
+        /// Cross-section of the profile.
+        /// </summary>
+        public Region CrossSection
+        {
+            get { return _crossSection; }
+            set { _crossSection = value; }
+        }
+
+        /// <summary>
+        /// Descriptor line of the profile
+        /// </summary>
+        public Line ReferanceLine { get; private set; }
+
+        /// <summary>
+        /// Solid view of the cross-section
+        /// </summary>
+        public HybridSolid View { get; private set; }
+
+        public ProfilePosition2 Position { get; set; }
+
+        /// <summary>
+        /// Cross-section width. Calculated from x value of the boundary box
+        /// </summary>
+        public double SectionWidth { get; private set; }
+        /// <summary>
+        /// Cross-section height. Calculated from y value of the boundary box
+        /// </summary>
+        public double SectionHeight { get; private set; }
+
+        public Point3D test { get; set; } = new Point3D(5, 5, 5);
+        #endregion
+
+        public Profile2()
+        {
+
+        }
+
+        public Profile2(devDept.Eyeshot.Entities.Region crossSection, devDept.Geometry.Segment3D refLine)
+        {
+            _crossSection = crossSection;
+
+            Position = new ProfilePosition2(refLine.P0, refLine.P1);
+            Position.Parent = this;
+            ReferanceLine = new Line(refLine);
+            InitView();
+            Position.InitPlanes(SectionWidth, SectionHeight);
+
+            Position.pAllign.OnTransforming += PAllingTransforming;
+        }
+
+        private void PAllingTransforming(object sender, TransformationEventArgs e)
+        {
+            this.View.TransformBy(e.Xform);
+            this.NotifyEntityChanged();
+        }
+
+        private void InitView()
+        {
+            var length = ReferanceLine.Length();
+
+            var transformation = new Transformation();
+            transformation.Rotation(Point3D.Origin, Vector3D.AxisZ, Vector3D.AxisY, -1.0 * Vector3D.AxisX, 
+                Position.StartPoint, Position.V1, Position.V2, Position.V3);
+
+            CrossSection.Regen(0.01);
+
+            this.SectionWidth = CrossSection.BoxSize.X;
+            this.SectionHeight = CrossSection.BoxSize.Y;
+
+            Point3D bboxMid = (CrossSection.BoxMax + CrossSection.BoxMin) / 2.0;
+            CrossSection.Translate(-bboxMid.X, -bboxMid.Y, bboxMid.Z);
+
+            View = CrossSection.ExtrudeAsSolid<HybridSolid>(length * Vector3D.AxisZ, 0.01);
+
+            var wirePnts = new List<Point3D>();
+
+            #region Local Axis of the Frame
+            wirePnts.Add((Point3D)Point3D.Origin.Clone());
+            wirePnts.Add(new Point3D(0, 0, length));
+
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length));
+            wirePnts.Add(new Point3D(0, 300, 0.5 * length));
+
+            wirePnts.Add(new Point3D(0, 300, 0.5 * length));
+            wirePnts.Add(new Point3D(100, 200, 0.5 * length));
+
+            wirePnts.Add(new Point3D(0, 300, 0.5 * length));
+            wirePnts.Add(new Point3D(-100, 200, 0.5 * length));
+
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length));
+            wirePnts.Add(new Point3D(-300, 0, 0.5 * length));
+
+            wirePnts.Add(new Point3D(-300, 0, 0.5 * length));
+            wirePnts.Add(new Point3D(-200, 100, 0.5 * length));
+
+            wirePnts.Add(new Point3D(-300, 0, 0.5 * length));
+            wirePnts.Add(new Point3D(-200, -100, 0.5 * length));
+
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length));
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length + 300));
+
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length + 300));
+            wirePnts.Add(new Point3D(100, 0, 0.5 * length + 200));
+
+            wirePnts.Add(new Point3D(0, 0, 0.5 * length + 300));
+            wirePnts.Add(new Point3D(-100, 0, 0.5 * length + 200));
+
+            wirePnts.ForEach(item => item.TransformBy(transformation));
+
+            #endregion
+
+            View.wireVertices = wirePnts.ToArray();
+
+            View.TransformBy(transformation);
+
+            View.Parent = this;
+        }
+
+        public void RefreshView()
+        {
+            var v_lcr = new Vector3D(Position.pAllign, Position.CurrentLCRPlane.ProjectAt(Position.pAllign));
+            var v_depth = new Vector3D(Position.pAllign, Position.CurrentDepthPlane.ProjectAt(Position.pAllign));
+
+            var t = new Translation(v_lcr + v_depth);
+            Position.pAllign.TransformBy(t);
+        }
+        public void NotifyEntityChanged()
+        {
+            OnEntityChanging?.Invoke(this.View, null);
+        }
     }
 }
