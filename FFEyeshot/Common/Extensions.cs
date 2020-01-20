@@ -21,5 +21,10 @@ namespace FFEyeshot.Common
 
             return me.PointAt(me.Project(pnt));
         }
+
+        public static double ToRadian(this double me)
+        {
+            return Math.PI * me / 180.0;
+        }
     }
 }

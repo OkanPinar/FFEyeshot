@@ -4,13 +4,23 @@ using System.Text;
 
 namespace FFEyeshot.Common
 {
-    public class TransformationEventArgs
+    public class TransformingEventArgs
     {
         public devDept.Geometry.Transformation Xform { get; private set; }
 
-        public TransformationEventArgs(devDept.Geometry.Transformation xform)
+        public TransformingEventArgs(devDept.Geometry.Transformation xform)
         {
             this.Xform = xform;
+        }
+    }
+
+    public class TransformedEventArgs
+    {
+        public object Old { get; private set; }
+
+        public TransformedEventArgs(object old)
+        {
+            this.Old = old;
         }
     }
 
@@ -27,7 +37,9 @@ namespace FFEyeshot.Common
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    public delegate void TransformationEventHandler(object sender, TransformationEventArgs e);
+    public delegate void TransformingEventHandler(object sender, TransformingEventArgs e);
+
+    public delegate void TransformedEventHandler(object sender, TransformedEventArgs e);
 
     /// <summary>
     /// Notification for changing of an entity

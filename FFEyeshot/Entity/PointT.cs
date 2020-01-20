@@ -8,7 +8,8 @@ namespace FFEyeshot.Entity
 {
     public class PointT :devDept.Geometry.Point3D, Common.INotifyTransformation
     {
-        public event TransformationEventHandler OnTransforming;
+        public event TransformingEventHandler OnTransforming;
+        public event TransformedEventHandler OnTransformed;
 
         public PointT(): base()
         {
@@ -32,8 +33,10 @@ namespace FFEyeshot.Entity
 
         public override void TransformBy(Transformation xform)
         {
-            OnTransforming?.Invoke(this, new TransformationEventArgs(xform));
+            var old = new PointT(this);
+            OnTransforming?.Invoke(this, new TransformingEventArgs(xform));
             base.TransformBy(xform);
+            OnTransformed?.Invoke(this, new TransformedEventArgs(old));
         }
     }
 }

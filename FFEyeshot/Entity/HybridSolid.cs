@@ -22,7 +22,7 @@ namespace FFEyeshot.Entity
 
         public HybridSolid(): base()
         { 
-            
+
         }
 
         public HybridSolid(HybridSolid another): base(another)

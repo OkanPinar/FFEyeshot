@@ -85,6 +85,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Entity\HybridSolid.cs" />
+    <Compile Include="Entity\RectangularPlate.cs" />
+    <Compile Include="Entity\SegmentT.cs" />
     <Compile Include="ViewLay\ThreeD\Picking.cs" />
     <Compile Include="ViewLay\ThreeD\ViewPort3D.cs" />
     <Page Include="UserControl1.xaml">
