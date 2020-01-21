@@ -7,10 +7,14 @@ using devDept.Eyeshot;
 
 namespace FFEyeshot.ViewLay.ThreeD
 {
+    
+
     [ToolboxItem(true)]
-    public partial class ViewPort3D: ViewportLayout
+    public partial class ViewPort3D: ViewportLayout, INotifyPropertyChanging, INotifyPropertyChanged
     {
-        
+        public event PropertyChangingEventHandler PropertyChanging;
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ViewPort3D()
         {
             this.Unlock("ULTWPF-0216-6751N-0SDLH-THEY0");
@@ -20,11 +24,13 @@ namespace FFEyeshot.ViewLay.ThreeD
 
             this.SelectionColor = System.Drawing.Color.GreenYellow;
         }
-
+        
         public override void EndInit()
         {
             this.Camera.ProjectionMode = devDept.Graphics.projectionType.Orthographic;
             base.EndInit();
         }
+    
+        
     }
 }

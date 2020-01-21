@@ -87,7 +87,9 @@
     <Compile Include="Entity\HybridSolid.cs" />
     <Compile Include="Entity\RectangularPlate.cs" />
     <Compile Include="Entity\SegmentT.cs" />
+    <Compile Include="ViewLay\ThreeD\Mouse.cs" />
     <Compile Include="ViewLay\ThreeD\Picking.cs" />
+    <Compile Include="ViewLay\ThreeD\Snapping.cs" />
     <Compile Include="ViewLay\ThreeD\ViewPort3D.cs" />
     <Page Include="UserControl1.xaml">
       <Generator>MSBuild:Compile</Generator>

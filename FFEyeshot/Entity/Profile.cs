@@ -975,7 +975,7 @@ namespace FFEyeshot.Entity
                     {
                         lcrLeft = new Plane(endP + V3 * secWidth * .5 + V3 * _lcrOffset, V3_curr);
                         lcrMiddle = new Plane(endP + V3 * _lcrOffset, V3_curr);
-                        lcrRight = new Plane(endP - V3 * secWidth * .5 + V3 * _lcrOffset, -1.0 * V3_curr);
+                        lcrRight = new Plane(endP - V3 * secWidth * .5 - V3 * _lcrOffset, -1.0 * V3_curr);
 
                         depthBehind = new Plane(endP - V2 * secHeight * .5 - V2 * _depthOffset, -1.0 * V2_curr);
                         depthMiddle = new Plane(endP + V2 * _depthOffset, V2_curr);
@@ -987,9 +987,9 @@ namespace FFEyeshot.Entity
                     {
                         lcrLeft = new Plane(endP + V3 * secHeight * .5 + V3 * _lcrOffset, V3_curr);
                         lcrMiddle = new Plane(endP + V3 * _lcrOffset, V3_curr);
-                        lcrRight = new Plane(endP - V3 * secHeight * .5 + V3 * _lcrOffset, -1.0 * V3_curr);
+                        lcrRight = new Plane(endP - V3 * secHeight * .5 - V3 * _lcrOffset, -1.0 * V3_curr);
 
-                        depthBehind = new Plane(endP - V2 * secWidth * .5 + V2 * _depthOffset, -1.0 * V2_curr);
+                        depthBehind = new Plane(endP - V2 * secWidth * .5 - V2 * _depthOffset, -1.0 * V2_curr);
                         depthMiddle = new Plane(endP + V2 * _lcrOffset, V2_curr);
                         depthFront = new Plane(endP + V2 * secWidth * .5 + V2 * _depthOffset, V2_curr);
                     }

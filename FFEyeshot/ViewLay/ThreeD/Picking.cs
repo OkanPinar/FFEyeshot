@@ -12,16 +12,45 @@ namespace FFEyeshot.ViewLay.ThreeD
 {
     public partial class ViewPort3D
     {
+        private bool _isPickingEnable = true;
+
+        public bool IsPickingEnable
+        {
+            get { return _isPickingEnable; }
+            set {
+                if (value != _isPickingEnable)
+                {
+                    OnPickingStateChanging(_isPickingEnable);
+                    PropertyChanging?.Invoke(this, new System.ComponentModel.PropertyChangingEventArgs("IsPickingEnable"));
+                    _isPickingEnable = value;
+                    OnPickingStateChanged(value);
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("IsPickingEnable"));
+                }
+            }
+        }
+
+        private void OnPickingStateChanging(bool oldState)
+        {
+
+        }
+
+        private void OnPickingStateChanged(bool newState)
+        {
+
+        }
+
         public Common.ViewportPickState CurrentPickState { get; set; }
 
         private bool buttonPressed = false;
+
+        public int CurrentIndex = -1;
 
         private System.Drawing.Point initialLocation;
         private System.Drawing.Point currentLocation;
 
         public event SelectionChangedEventHandler CustomSelectionChanged;
 
-        protected override void OnMouseDown(MouseButtonEventArgs e)
+        protected void OnMouseDown_Picking(MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left && ActionMode == devDept.Eyeshot.actionType.None)
             {
@@ -36,7 +65,7 @@ namespace FFEyeshot.ViewLay.ThreeD
             base.OnMouseDown(e);
         }
 
-        protected override void OnMouseMove(MouseEventArgs e)
+        protected void OnMouseMove_Picking(MouseEventArgs e)
         {
             if (buttonPressed)
             {
@@ -60,7 +89,7 @@ namespace FFEyeshot.ViewLay.ThreeD
             base.OnMouseMove(e);
         }
 
-        protected override void OnMouseUp(MouseButtonEventArgs e)
+        protected void OnMouseUp_Picking(MouseButtonEventArgs e)
         {
             List<int> added = new List<int>();
             List<int> removed = new List<int>();
