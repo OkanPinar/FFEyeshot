@@ -12,6 +12,12 @@ namespace FFEyeshot.ViewLay.ThreeD
 {
     public partial class ViewPort3D
     {
+        public Color CrossingBoxColor { get; set; } = Color.DarkBlue;
+        public Color EnclosedBoxColor { get; set; } = Color.DarkRed;
+
+        #region State
+        public Common.ViewportPickState CurrentPickState { get; set; }
+
         private bool _isPickingEnable = true;
 
         public bool IsPickingEnable
@@ -20,29 +26,26 @@ namespace FFEyeshot.ViewLay.ThreeD
             set {
                 if (value != _isPickingEnable)
                 {
-                    OnPickingStateChanging(_isPickingEnable);
+                    OnPickingEnableChanging(_isPickingEnable);
                     PropertyChanging?.Invoke(this, new System.ComponentModel.PropertyChangingEventArgs("IsPickingEnable"));
                     _isPickingEnable = value;
-                    OnPickingStateChanged(value);
+                    OnPickingEnableChanged(value);
                     PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("IsPickingEnable"));
                 }
             }
         }
 
-        private void OnPickingStateChanging(bool oldState)
+        private void OnPickingEnableChanging(bool oldState)
         {
 
         }
 
-        private void OnPickingStateChanged(bool newState)
+        private void OnPickingEnableChanged(bool newState)
         {
 
         }
-
-        public Common.ViewportPickState CurrentPickState { get; set; }
-
-        private bool buttonPressed = false;
-
+        #endregion
+                
         public int CurrentIndex = -1;
 
         private System.Drawing.Point initialLocation;
@@ -61,8 +64,6 @@ namespace FFEyeshot.ViewLay.ThreeD
                     CurrentPickState = Common.ViewportPickState.Pick;
                 }
             }
-
-            base.OnMouseDown(e);
         }
 
         protected void OnMouseMove_Picking(MouseEventArgs e)
@@ -82,11 +83,8 @@ namespace FFEyeshot.ViewLay.ThreeD
 
                 currentLocation = location;
 
-                PaintBackBuffer();
-                SwapBuffers();
-
+                _SwapBufferRequired = true;
             }
-            base.OnMouseMove(e);
         }
 
         protected void OnMouseUp_Picking(MouseButtonEventArgs e)
@@ -172,10 +170,7 @@ namespace FFEyeshot.ViewLay.ThreeD
                 Invalidate();
             }
 
-            if (CustomSelectionChanged != null)
-                CustomSelectionChanged(this, new SelectionChangedEventArgs(added.ToArray(), removed.ToArray(), this));
-
-            base.OnMouseUp(e);
+            CustomSelectionChanged?.Invoke(this, new SelectionChangedEventArgs(added.ToArray(), removed.ToArray(), this));
         }
 
         private void ManageSelection(int ent, IList<devDept.Eyeshot.Entities.Entity> myEnts, List<int> added, List<int> removed)
@@ -195,14 +190,14 @@ namespace FFEyeshot.ViewLay.ThreeD
             }
         }
         
-        protected override void DrawOverlay(DrawSceneParams data)
+        protected void DrawOverlay_Picking(DrawSceneParams data)
         {
             if (buttonPressed)
             {
                 if (CurrentPickState == Common.ViewportPickState.Crossing)
-                    DrawSelectionBox(initialLocation, currentLocation, System.Drawing.Color.DarkBlue, true, true);
+                    DrawSelectionBox(initialLocation, currentLocation, CrossingBoxColor, true, true);
                 else if (CurrentPickState == Common.ViewportPickState.Enclosed)
-                    DrawSelectionBox(initialLocation, currentLocation, System.Drawing.Color.DarkRed, true, false);
+                    DrawSelectionBox(initialLocation, currentLocation, EnclosedBoxColor, true, false);
             }
         }
 

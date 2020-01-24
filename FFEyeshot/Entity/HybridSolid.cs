@@ -16,6 +16,7 @@ namespace FFEyeshot.Entity
     {
         public object Parent { get; set; }
 
+        //TODO: Add V1,V2,V3 wire vertices to draw vectors
         public Point3D[] wireVertices { get; set; }
 
         private EntityGraphicsData wireGraphicsData = new EntityGraphicsData();

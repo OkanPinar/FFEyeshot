@@ -13,15 +13,15 @@ namespace FFEyeshot.ViewLay.ThreeD
 {
     public class SnapPoint : Point3D
     {
-        public ViewPort3D.SnapType Type;
+        public SnapState.SnapType Type;
 
         public SnapPoint()
             : base()
         {
-            Type = ViewPort3D.SnapType.NONE;
+            Type = SnapState.SnapType.NONE;
         }
 
-        public SnapPoint(Point3D point3D, ViewPort3D.SnapType SnapType) : base(point3D.X, point3D.Y, point3D.Z)
+        public SnapPoint(Point3D point3D, SnapState.SnapType SnapType) : base(point3D.X, point3D.Y, point3D.Z)
         {
             this.Type = SnapType;
         }
@@ -42,38 +42,8 @@ namespace FFEyeshot.ViewLay.ThreeD
 
     public delegate void SnapEventHandler(SnapEventArgs e);
 
-    public partial class ViewPort3D
+    public class SnapState
     {
-        #region State
-
-        private bool _isSnapEnable = true;
-
-        public bool SnapEnable
-        {
-            get { return _isSnapEnable; }
-            set {
-                if (value != _isSnapEnable)
-                {
-                    OnSnapStateChanging(_isSnapEnable);
-                    PropertyChanging?.Invoke(this, new System.ComponentModel.PropertyChangingEventArgs("SnapEnable"));
-                    _isSnapEnable = value;
-                    OnSnapStateChanged(value);
-                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("SnapEnable"));
-                }
-            }
-        }
-        private void OnSnapStateChanging(bool oldState)
-        {
-
-        }
-
-        private void OnSnapStateChanged(bool newState)
-        {
-
-        }
-       
-        #endregion
-
         public enum SnapType
         {
             NONE,
@@ -89,6 +59,84 @@ namespace FFEyeshot.ViewLay.ThreeD
             Wireframe,
             Solid
         }
+
+        public List<SnapType> EnabledSnapTypes { get; set; } = new List<SnapType>() { SnapType.END, SnapType.CENTER, SnapType.MID };
+        
+        public List<SnapMode> EnabledSnapModes { get; set; } = new List<SnapMode>() { SnapMode.Wireframe, SnapMode.Solid };
+
+        public event EventHandler SnapStateChanged;
+        
+        public void AddType(SnapType snapType)
+        {
+            if (!EnabledSnapTypes.Contains(snapType))
+            {
+                EnabledSnapTypes.Add(snapType);
+                SnapStateChanged?.Invoke(this, null);
+            }
+        }
+
+        public void RemoveType(SnapType snapType)
+        {
+            if (EnabledSnapTypes.Contains(snapType))
+            {
+                EnabledSnapTypes.Remove(snapType);
+                SnapStateChanged?.Invoke(this, null);
+            }
+        }
+
+        public void AddMode(SnapMode snapMode)
+        {
+            if (!EnabledSnapModes.Contains(snapMode))
+            {
+                EnabledSnapModes.Add(snapMode);
+                SnapStateChanged?.Invoke(this, null);
+            }
+        }
+
+        public void RemoveMode(SnapMode snapMode)
+        {
+            if (EnabledSnapModes.Contains(snapMode))
+            {
+                EnabledSnapModes.Remove(snapMode);
+                SnapStateChanged?.Invoke(this, null);
+            }
+        }
+    }
+
+    public partial class ViewPort3D
+    {
+        #region State
+
+        public SnapState StateSnap { get; set; } = new SnapState();
+
+        private bool _isSnapEnable = true;
+
+        public bool IsSnapEnable
+        {
+            get { return _isSnapEnable; }
+            set {
+                if (value != _isSnapEnable)
+                {
+                    OnSnapEnableChanging(_isSnapEnable);
+                    PropertyChanging?.Invoke(this, new System.ComponentModel.PropertyChangingEventArgs("SnapEnable"));
+                    _isSnapEnable = value;
+                    OnSnapEnableChanged(value);
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs("SnapEnable"));
+                }
+            }
+        }
+        private void OnSnapEnableChanging(bool oldState)
+        {
+
+        }
+
+        private void OnSnapEnableChanged(bool newState)
+        {
+
+        }
+       
+        #endregion
+               
         private SnapPoint FindClosestPoint(SnapPoint[] snapPoints)
         {
             double minDist = double.MaxValue;
@@ -118,9 +166,6 @@ namespace FFEyeshot.ViewLay.ThreeD
             return snap;
         }
 
-        public List<SnapType> CurrentSnapTypes = new List<SnapType>() { SnapType.END, SnapType.CENTER, SnapType.MID };
-        public List<SnapMode> CurrentSnapModes = new List<SnapMode>() { SnapMode.Wireframe, SnapMode.Solid };
-
         public static double snapSymbolSize { get; set; } = 20;
 
         public event SnapEventHandler Snapping;
@@ -136,20 +181,20 @@ namespace FFEyeshot.ViewLay.ThreeD
 
             switch (snap.Type)
             {
-                case SnapType.POINT:
+                case SnapState.SnapType.POINT:
                     DrawCircle(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     DrawCross(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     break;
-                case SnapType.CENTER:
+                case SnapState.SnapType.CENTER:
                     DrawCircle(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     break;
-                case SnapType.END:
+                case SnapState.SnapType.END:
                     DrawQuad(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     break;
-                case SnapType.MID:
+                case SnapState.SnapType.MID:
                     DrawTriangle(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     break;
-                case SnapType.QUAD:
+                case SnapState.SnapType.QUAD:
                     renderContext.SetLineSize(3.0f);
                     DrawRhombus(new System.Drawing.Point((int)onScreen.X, (int)(onScreen.Y)));
                     break;
@@ -279,164 +324,136 @@ namespace FFEyeshot.ViewLay.ThreeD
 
             if (CurrentIndex != -1)
             {
-                Entity ent = Entities[CurrentIndex];
+                devDept.Eyeshot.Entities.Entity ent = Entities[CurrentIndex];
 
-                if (ent is Profiles.ProfileBase)
+                if (ent is Entity.IFFEntity ffEntity)
                 {
-                    Profiles.ProfileBase p = (Profiles.ProfileBase)ent;
-                    foreach (var snapMode in CurrentSnapModes)
-                    {
-                        switch (snapMode)
-                        {
-                            case SnapMode.Wireframe:
-                                snapPoints.Add(new SnapPoint(p.PI, SnapType.END));
-                                snapPoints.Add(new SnapPoint((p.PI + p.PJ) / 2, SnapType.MID));
-                                snapPoints.Add(new SnapPoint(p.PJ, SnapType.END));
-                                break;
-                            //case SnapMode.Solid:
-                            //    var temp = p.GetSnapPoint();
-                            //    temp.ForEach(item => snapPoints.Add(new SnapPoint(item, SnapType.QUAD)));
-                            //    break;
-                            default:
-                                break;
-                        }
-                    }
+                    snapPoints.AddRange(ffEntity.GetSnapPoints(StateSnap));
                 }
 
-                else if (ent is devDept.Eyeshot.Entities.Point)
+                else if (ent is Point point)
                 {
-                    devDept.Eyeshot.Entities.Point point = (devDept.Eyeshot.Entities.Point)ent;
-
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.POINT:
+                            case SnapState.SnapType.POINT:
                                 Point3D point3d = point.Vertices[0];
-                                snapPoints.Add(new SnapPoint(point3d, SnapType.POINT));
+                                snapPoints.Add(new SnapPoint(point3d, SnapState.SnapType.POINT));
                                 break;
                         }
                     }
                 }
-                else if (ent is Line) //line
+                else if (ent is Line line) //line
                 {
-                    Line line = (Line)ent;
-
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.Add(new SnapPoint(line.StartPoint, SnapType.END));
-                                snapPoints.Add(new SnapPoint(line.EndPoint, SnapType.END));
+                            case SnapState.SnapType.END:
+                                snapPoints.Add(new SnapPoint(line.StartPoint, SnapState.SnapType.END));
+                                snapPoints.Add(new SnapPoint(line.EndPoint, SnapState.SnapType.END));
                                 break;
-                            case SnapType.MID:
-                                snapPoints.Add(new SnapPoint(line.MidPoint, SnapType.MID));
+                            case SnapState.SnapType.MID:
+                                snapPoints.Add(new SnapPoint(line.MidPoint, SnapState.SnapType.MID));
                                 break;
                         }
                     }
                 }
-                else if (ent is LinearPath)//polyline
+                else if (ent is LinearPath polyline)//polyline
                 {
-                    LinearPath polyline = (LinearPath)ent;
                     List<SnapPoint> polyLineSnapPoints = new List<SnapPoint>();
 
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                foreach (Point3D point in polyline.Vertices)
-                                    polyLineSnapPoints.Add(new SnapPoint(point, SnapType.END));
+                            case SnapState.SnapType.END:
+                                foreach (var ver in polyline.Vertices)
+                                    polyLineSnapPoints.Add(new SnapPoint(ver, SnapState.SnapType.END));
                                 snapPoints.AddRange(polyLineSnapPoints);
                                 break;
                         }
                     }
                 }
-                else if (ent is CompositeCurve)//composite
+                else if (ent is CompositeCurve composite)//composite
                 {
-                    CompositeCurve composite = (CompositeCurve)ent;
                     List<SnapPoint> polyLineSnapPoints = new List<SnapPoint>();
 
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
+                            case SnapState.SnapType.END:
                                 foreach (ICurve curveSeg in composite.CurveList)
-                                    polyLineSnapPoints.Add(new SnapPoint(curveSeg.EndPoint, SnapType.END));
-                                polyLineSnapPoints.Add(new SnapPoint(composite.CurveList[0].StartPoint, SnapType.END));
+                                    polyLineSnapPoints.Add(new SnapPoint(curveSeg.EndPoint, SnapState.SnapType.END));
+                                polyLineSnapPoints.Add(new SnapPoint(composite.CurveList[0].StartPoint, SnapState.SnapType.END));
                                 snapPoints.AddRange(polyLineSnapPoints);
                                 break;
                         }
                     }
                 }
-                else if (ent is Arc) //Arc
+                else if (ent is Arc arc) //Arc
                 {
-                    Arc arc = (Arc)ent;
-
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.StartPoint, SnapType.END),
-                                                           new SnapPoint(arc.EndPoint, SnapType.END) });
+                            case SnapState.SnapType.END:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.StartPoint, SnapState.SnapType.END),
+                                                           new SnapPoint(arc.EndPoint, SnapState.SnapType.END) });
                                 break;
-                            case SnapType.MID:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.MidPoint, SnapType.MID) });
+                            case SnapState.SnapType.MID:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.MidPoint, SnapState.SnapType.MID) });
                                 break;
-                            case SnapType.CENTER:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.Center, SnapType.CENTER) });
+                            case SnapState.SnapType.CENTER:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(arc.Center, SnapState.SnapType.CENTER) });
                                 break;
                         }
                     }
                 }
-                else if (ent is Circle) //Circle
+                else if (ent is Circle circle) //Circle
                 {
-                    Circle circle = (Circle)ent;
-
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.EndPoint, SnapType.END) });
+                            case SnapState.SnapType.END:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.EndPoint, SnapState.SnapType.END) });
                                 break;
-                            case SnapType.MID:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.PointAt(circle.Domain.Mid), SnapType.MID) });
+                            case SnapState.SnapType.MID:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.PointAt(circle.Domain.Mid), SnapState.SnapType.MID) });
                                 break;
-                            case SnapType.CENTER:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.Center, SnapType.CENTER) });
+                            case SnapState.SnapType.CENTER:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(circle.Center, SnapState.SnapType.CENTER) });
                                 break;
-                            case SnapType.QUAD:
+                            case SnapState.SnapType.QUAD:
                                 Point3D quad1 = new Point3D(circle.Center.X, circle.Center.Y + circle.Radius);
                                 Point3D quad2 = new Point3D(circle.Center.X + circle.Radius, circle.Center.Y);
                                 Point3D quad3 = new Point3D(circle.Center.X, circle.Center.Y - circle.Radius);
                                 Point3D quad4 = new Point3D(circle.Center.X - circle.Radius, circle.Center.Y);
 
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(quad1, SnapType.QUAD),
-                                                           new SnapPoint(quad2, SnapType.QUAD),
-                                                           new SnapPoint(quad3, SnapType.QUAD),
-                                                           new SnapPoint(quad4, SnapType.QUAD)});
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(quad1, SnapState.SnapType.QUAD),
+                                                           new SnapPoint(quad2, SnapState.SnapType.QUAD),
+                                                           new SnapPoint(quad3, SnapState.SnapType.QUAD),
+                                                           new SnapPoint(quad4, SnapState.SnapType.QUAD)});
                                 break;
                         }
                     }
                 }
 
-                else if (ent is Curve) // Spline
+                else if (ent is Curve curve) // Spline
                 {
-                    Curve curve = (Curve)ent;
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.AddRange(new SnapPoint[] {new SnapPoint(curve.StartPoint, SnapType.END),
-                                                          new SnapPoint(curve.EndPoint, SnapType.END)});
+                            case SnapState.SnapType.END:
+                                snapPoints.AddRange(new SnapPoint[] {new SnapPoint(curve.StartPoint, SnapState.SnapType.END),
+                                                          new SnapPoint(curve.EndPoint, SnapState.SnapType.END)});
                                 break;
-                            case SnapType.MID:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(curve.PointAt(0.5), SnapType.MID) });
+                            case SnapState.SnapType.MID:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(curve.PointAt(0.5), SnapState.SnapType.MID) });
                                 break;
                         }
                     }
@@ -445,16 +462,16 @@ namespace FFEyeshot.ViewLay.ThreeD
                 else if (ent is EllipticalArc) //Elliptical Arc
                 {
                     EllipticalArc elArc = (EllipticalArc)ent;
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.AddRange(new SnapPoint[] {new SnapPoint(elArc.StartPoint, SnapType.END),
-                                                          new SnapPoint(elArc.EndPoint, SnapType.END)});
+                            case SnapState.SnapType.END:
+                                snapPoints.AddRange(new SnapPoint[] {new SnapPoint(elArc.StartPoint, SnapState.SnapType.END),
+                                                          new SnapPoint(elArc.EndPoint, SnapState.SnapType.END)});
                                 break;
-                            case SnapType.CENTER:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(elArc.Center, SnapType.CENTER) });
+                            case SnapState.SnapType.CENTER:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(elArc.Center, SnapState.SnapType.CENTER) });
                                 break;
                         }
                     }
@@ -462,18 +479,18 @@ namespace FFEyeshot.ViewLay.ThreeD
                 else if (ent is Ellipse) //Ellipse
                 {
                     Ellipse ellipse = (Ellipse)ent;
-                    foreach (var activeObjectSnap in CurrentSnapTypes)
+                    foreach (var activeObjectSnap in StateSnap.EnabledSnapTypes)
                     {
                         switch (activeObjectSnap)
                         {
-                            case SnapType.END:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.EndPoint, SnapType.END) });
+                            case SnapState.SnapType.END:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.EndPoint, SnapState.SnapType.END) });
                                 break;
-                            case SnapType.MID:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.PointAt(ellipse.Domain.Mid), SnapType.MID) });
+                            case SnapState.SnapType.MID:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.PointAt(ellipse.Domain.Mid), SnapState.SnapType.MID) });
                                 break;
-                            case SnapType.CENTER:
-                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.Center, SnapType.CENTER) });
+                            case SnapState.SnapType.CENTER:
+                                snapPoints.AddRange(new SnapPoint[] { new SnapPoint(ellipse.Center, SnapState.SnapType.CENTER) });
                                 break;
                         }
                     }
@@ -503,6 +520,7 @@ namespace FFEyeshot.ViewLay.ThreeD
                 SnapPoint p = FindClosestPoint(SnapPoints);
 
                 this.CurrentPoint = p;
+                _SwapBufferRequired = true;
             }
 
             else
@@ -527,5 +545,14 @@ namespace FFEyeshot.ViewLay.ThreeD
         }
 
         #endregion
+    
+        protected void DrawOverlay_Snapping(DrawSceneParams data)
+        {
+            if (CurrentPoint is SnapPoint point)
+            {
+                DisplaySnappedVertex(point);
+            }
+        }
+    
     }
 }

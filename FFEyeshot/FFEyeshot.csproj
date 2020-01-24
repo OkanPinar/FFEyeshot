@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CopyModules, Version=1.0.6254.26666, Culture=neutral, PublicKeyToken=5385d83d2fb4d7d9, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Program Files\devDept Software\Eyeshot Ultimate 10\Bin\x64\CopyModules.dll</HintPath>
+    </Reference>
     <Reference Include="devDept.Eyeshot.Control.Wpf.v10, Version=10.0.1050.0, Culture=neutral, PublicKeyToken=5385d83d2fb4d7d9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Program Files\devDept Software\Eyeshot Ultimate 10\Bin\devDept.Eyeshot.Control.Wpf.v10.dll</HintPath>
@@ -68,25 +72,31 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="Xceed.Wpf.AvalonDock, Version=3.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-      <HintPath>..\..\..\MYS\mysPanel\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
+      <HintPath>..\..\MYSBase\MYSBase\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
     </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=3.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-      <HintPath>..\..\..\MYS\mysPanel\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
+      <HintPath>..\..\MYSBase\MYSBase\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
     </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=3.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-      <HintPath>..\..\..\MYS\mysPanel\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
+      <HintPath>..\..\MYSBase\MYSBase\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
     </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=3.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-      <HintPath>..\..\..\MYS\mysPanel\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
+      <HintPath>..\..\MYSBase\MYSBase\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
     </Reference>
     <Reference Include="Xceed.Wpf.Toolkit, Version=3.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-      <HintPath>..\..\..\MYS\mysPanel\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
+      <HintPath>..\..\MYSBase\MYSBase\packages\Extended.Wpf.Toolkit.3.7.0\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entity\CrossSection.cs" />
+    <Compile Include="Entity\IFFEntity.cs" />
     <Compile Include="Entity\HybridSolid.cs" />
+    <Compile Include="Entity\PolygonalPlate.cs" />
+    <Compile Include="Entity\Profile.cs" />
     <Compile Include="Entity\RectangularPlate.cs" />
-    <Compile Include="Entity\SegmentT.cs" />
+    <Compile Include="Helper\ProfileHelper.cs" />
+    <Compile Include="ViewLay\ThreeD\Command\CreateEntity.cs" />
+    <Compile Include="ViewLay\ThreeD\Drawing.cs" />
     <Compile Include="ViewLay\ThreeD\Mouse.cs" />
     <Compile Include="ViewLay\ThreeD\Picking.cs" />
     <Compile Include="ViewLay\ThreeD\Snapping.cs" />
@@ -100,7 +110,7 @@
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Common\Interface.cs" />
     <Compile Include="Entity\PointT.cs" />
-    <Compile Include="Entity\Profile.cs" />
+    <Compile Include="Entity\Profile2.cs" />
     <Compile Include="UserControl1.xaml.cs">
       <DependentUpon>UserControl1.xaml</DependentUpon>
       <SubType>Code</SubType>

@@ -6,11 +6,11 @@ namespace FFEyeshot.Common
 {
     public class TransformingEventArgs
     {
-        public devDept.Geometry.Transformation Xform { get; private set; }
+        public devDept.Geometry.Transformation TData { get; private set; }
 
-        public TransformingEventArgs(devDept.Geometry.Transformation xform)
+        public TransformingEventArgs(devDept.Geometry.Transformation tData)
         {
-            this.Xform = xform;
+            this.TData = tData;
         }
     }
 
@@ -24,14 +24,16 @@ namespace FFEyeshot.Common
         }
     }
 
-    public class EntityChangingEventArgs
+    public class EntityChangedEventArgs
     {
-        //devDept.Eyeshot.CompileParams data { get; set; }
-        public EntityChangingEventArgs(devDept.Eyeshot.CompileParams data)
+        //devDept.Eyeshot.Entities.Entity View { get; set; }
+
+        public EntityChangedEventArgs()
         {
 
         }
     }
+
     /// <summary>
     /// Notification for transformation of an entity
     /// </summary>
@@ -46,5 +48,6 @@ namespace FFEyeshot.Common
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    public delegate void EntityChangingEventHandler(object sender, EntityChangingEventArgs e);
+
+    public delegate void EntityChangedEventHandler(object sender, EntityChangedEventArgs e);
 }

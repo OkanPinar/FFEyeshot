@@ -5,7 +5,7 @@
                     xmlns:local="clr-namespace:FFEyeshot.ViewLay.ThreeD">
     <local:ViewPort3D x:Key="viewportLayout3D">
         <local:ViewPort3D.Viewports>
-            <ddes:Viewport DisplayMode="Flat">
+            <ddes:Viewport DisplayMode="Shaded">
                 <ddes:Viewport.Background>
                     <ddgr:BackgroundSettings BottomColor="WhiteSmoke" StyleMode="LinearGradient" TopColor="#FF66A3D2"/>
                 </ddes:Viewport.Background>

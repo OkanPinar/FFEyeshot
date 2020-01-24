@@ -38,5 +38,13 @@ namespace FFEyeshot.Entity
             base.TransformBy(xform);
             OnTransformed?.Invoke(this, new TransformedEventArgs(old));
         }
+
+        public void NotifyTransformation(object sender, TransformingEventArgs e)
+        {
+            if (sender != this)
+            {
+                this.TransformBy(e.TData);
+            }
+        }
     }
 }
