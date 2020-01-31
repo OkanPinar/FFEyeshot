@@ -7,11 +7,22 @@ using devDept.Graphics;
 using devDept.Eyeshot.Entities;
 using System.Drawing;
 using devDept.Geometry;
+using System.Windows;
+using System.Linq;
 
 namespace FFEyeshot.ViewLay.ThreeD
 {
     public partial class ViewPort3D
     {
+        public static readonly DependencyProperty SelectedEntityProperty =
+            DependencyProperty.Register("SelectedEntity", typeof(object), typeof(ViewPort3D));
+
+        public object SelectedEntitiy
+        {
+            get { return GetValue(SelectedEntityProperty); }
+            set { SetValue(SelectedEntityProperty, value); }
+        }
+
         public Color CrossingBoxColor { get; set; } = Color.DarkBlue;
         public Color EnclosedBoxColor { get; set; } = Color.DarkRed;
 
@@ -179,17 +190,60 @@ namespace FFEyeshot.ViewLay.ThreeD
             {
                 myEnts[ent].Selected = !myEnts[ent].Selected;
                 if (myEnts[ent].Selected)
+                {
                     added.Add(ent);
+                    SelectedEntitiy = GetSelectedItem(myEnts[ent]);
+                }
                 else
+                {
                     removed.Add(ent);
+                    SelectedEntitiy = null;
+                }
+                   
             }
             else
             {
                 myEnts[ent].Selected = true;
                 added.Add(ent);
+                SelectedEntitiy = GetSelectedItem(myEnts[ent]);
             }
         }
-        
+
+        private object GetSelectedItem(devDept.Eyeshot.Entities.Entity ent)
+        {
+            List<System.Reflection.PropertyInfo> props = null;
+            if (ent is BlockReference br)
+            {
+                var block = Blocks[br.BlockName];
+                props = new List<System.Reflection.PropertyInfo>(block.GetType().GetProperties());
+
+                var checkProp = props.Where(item => item.Name == "Parent").DefaultIfEmpty().First();
+                if (checkProp != null)
+                {
+                    return checkProp.GetValue(block);
+                }
+                else
+                {
+                    return block;
+                }
+            }
+            else
+            {
+                props = new List<System.Reflection.PropertyInfo>(ent.GetType().GetProperties());
+
+                var checkProp = props.Where(item => item.Name == "Parent").DefaultIfEmpty().First();
+                if (checkProp != null)
+                {
+                    return checkProp.GetValue(ent);
+                }
+
+                else
+                {
+                    return ent;
+                }
+            }
+        }
+
         protected void DrawOverlay_Picking(DrawSceneParams data)
         {
             if (buttonPressed)

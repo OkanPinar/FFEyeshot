@@ -34,6 +34,7 @@ namespace FFEyeshot.Entity
             set { _thickness = value; }
         }
 
+        private PointT[] _points = new PointT[4];
 
         public RectangularPlate()
         {
@@ -48,16 +49,38 @@ namespace FFEyeshot.Entity
             this.InitializeView();
         }
 
-        public void InitializeView()
+        private void InitializePoints()
         {
             double halfWidth = _width * 0.5;
             double halfHeight = _height * 0.5;
-            var pnts = new devDept.Geometry.Point3D[5];
-            pnts[0] = new devDept.Geometry.Point3D(-halfWidth, 0, -halfHeight);
-            pnts[1] = new devDept.Geometry.Point3D(-halfWidth, 0,  halfHeight);
-            pnts[2] = new devDept.Geometry.Point3D( halfWidth, 0,  halfHeight);
-            pnts[3] = new devDept.Geometry.Point3D( halfWidth, 0, -halfHeight);
-            pnts[4] = new devDept.Geometry.Point3D(-halfWidth, 0, -halfHeight);
+            _points[0] = new PointT(-halfWidth, 0, -halfHeight);
+            _points[1] = new PointT(-halfWidth, 0, halfHeight);
+            _points[2] = new PointT(halfWidth, 0, halfHeight);
+            _points[3] = new PointT(halfWidth, 0, -halfHeight);
+            foreach (var point in _points)
+            {
+                point.OnTransformed += NotifyPointIsChanged;
+            }
+        }
+
+        private void NotifyPointIsChanged(object sender, Common.TransformingEventArgs e)
+        {
+            var pnts = this._points.ToList<devDept.Geometry.Point3D>();
+            pnts.Add(pnts[0]);
+
+            var LinearPath = new devDept.Eyeshot.Entities.LinearPath(pnts);
+
+            var region = new devDept.Eyeshot.Entities.Region(LinearPath);
+
+            var temp = region.ExtrudeAsSolid(devDept.Geometry.Vector3D.AxisZ * this.Thickness, 0.01);
+
+            
+        }
+
+        public void InitializeView()
+        {
+            var pnts = this._points.ToList<devDept.Geometry.Point3D>();
+            pnts.Add(pnts[0]);
 
             var LinearPath = new devDept.Eyeshot.Entities.LinearPath(pnts);
 

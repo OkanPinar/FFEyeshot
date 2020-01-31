@@ -1,14 +1,21 @@
 ﻿using devDept.Geometry;
 
 using System;
+using System.Collections.Generic;
 
 using FFEyeshot.Common;
 
 namespace FFEyeshot.Entity
 {
-    public class PointT :devDept.Geometry.Point3D, Common.INotifyTransformation
+    /// <summary>
+    /// Point3D with transformation notifications
+    /// </summary>
+    public class PointT :devDept.Geometry.Point3D, INotifyTransformation
     {
-        public event TransformingEventHandler OnTransforming;
+
+        /// <summary>
+        /// Transformation event for entities. Required entities should be register that event.
+        /// </summary>
         public event TransformedEventHandler OnTransformed;
 
         public PointT(): base()
@@ -33,18 +40,42 @@ namespace FFEyeshot.Entity
 
         public override void TransformBy(Transformation xform)
         {
-            var old = new PointT(this);
-            OnTransforming?.Invoke(this, new TransformingEventArgs(xform));
             base.TransformBy(xform);
-            OnTransformed?.Invoke(this, new TransformedEventArgs(old));
+            OnTransformed?.Invoke(this, new TransformingEventArgs(xform));
         }
-
+        
         public void NotifyTransformation(object sender, TransformingEventArgs e)
         {
-            if (sender != this)
+            if (this != (PointT)sender)
             {
                 this.TransformBy(e.TData);
             }
+        }
+    }
+
+    public class PointTGroup: List<PointT>
+    {
+        public PointTGroup(): base()
+        {
+
+        }
+
+        public PointTGroup(IEnumerable<PointT> collection): base(collection)
+        {
+
+        }
+
+        public void TransformBy(Transformation xform)
+        {
+            for (int i = 0; i < Count - 1; i++)
+            {
+                var P = new Point3D(this[i].X, this[i].Y, this[i].Z);
+                P.TransformBy(xform);
+                this[i].X = P.X;
+                this[i].Y = P.Y;
+                this[i].Z = P.Z;
+            }
+            this[Count - 1].TransformBy(xform);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace FFEyeshot.Common
 {
     public interface INotifyTransformation
     {
-        event TransformingEventHandler OnTransforming;
+        event TransformedEventHandler OnTransformed;
 
         void NotifyTransformation(object sender, TransformingEventArgs e);
     }
@@ -14,6 +14,5 @@ namespace FFEyeshot.Common
     public interface INotifyEntityChanged
     {
         event EntityChangedEventHandler OnEntityChanged;
-
     }
 }

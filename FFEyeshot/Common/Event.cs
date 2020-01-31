@@ -14,15 +14,6 @@ namespace FFEyeshot.Common
         }
     }
 
-    public class TransformedEventArgs
-    {
-        public object Old { get; private set; }
-
-        public TransformedEventArgs(object old)
-        {
-            this.Old = old;
-        }
-    }
 
     public class EntityChangedEventArgs
     {
@@ -41,7 +32,7 @@ namespace FFEyeshot.Common
     /// <param name="e"></param>
     public delegate void TransformingEventHandler(object sender, TransformingEventArgs e);
 
-    public delegate void TransformedEventHandler(object sender, TransformedEventArgs e);
+    public delegate void TransformedEventHandler(object sender, TransformingEventArgs e);
 
     /// <summary>
     /// Notification for changing of an entity

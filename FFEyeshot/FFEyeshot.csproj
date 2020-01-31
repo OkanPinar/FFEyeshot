@@ -88,6 +88,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Entity\BlockMy.cs" />
     <Compile Include="Entity\CrossSection.cs" />
     <Compile Include="Entity\IFFEntity.cs" />
     <Compile Include="Entity\HybridSolid.cs" />

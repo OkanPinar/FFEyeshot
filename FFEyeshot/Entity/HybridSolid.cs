@@ -63,7 +63,7 @@ namespace FFEyeshot.Entity
 
         public override void Dispose()
         {
-            RenderContextBase.FreeEntityGraphicsData(wireGraphicsData);
+            wireGraphicsData.Dispose();
             base.Dispose();
         }
 

@@ -1,4 +1,5 @@
-﻿using FFEyeshot.ViewLay.ThreeD;
+﻿using devDept.Geometry;
+using FFEyeshot.ViewLay.ThreeD;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,7 +79,11 @@ namespace FFEyeshot.Helper
             if (_state == 1)
             {
                 var VP = sender as ViewPort3D;
-                VP.renderContext.DrawLine(StartPoint, DrawPlane.PointAt(DrawPlane.Project(VP.CurrentPoint)));
+
+                Point3D screenStart = VP.WorldToScreen(StartPoint);
+                Point3D screenCurrent = VP.WorldToScreen(DrawPlane.PointAt(DrawPlane.Project(VP.CurrentPoint)));
+
+                VP.renderContext.DrawLine(screenStart, screenCurrent);
             }
         }
     }

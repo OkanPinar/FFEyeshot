@@ -700,7 +700,7 @@ namespace FFEyeshot.Entity
                 if (value != _position)
                 {
                     _position.Parent = null;
-                    _position.pAllign.OnTransforming -= PAllingTransforming;
+                    _position.pAllign.OnTransformed -= PAllingTransforming;
                     //value.Parent = this;
                 }
             }
@@ -853,7 +853,7 @@ namespace FFEyeshot.Entity
             V3_curr.TransformBy(currentV2V3Transfromation);
 
             _position.pAllign = new PointT(EndPoint);
-            _position.pAllign.OnTransforming += PAllingTransforming;
+            _position.pAllign.OnTransformed += PAllingTransforming;
         }
 
         public void RefreshView()
@@ -882,7 +882,7 @@ namespace FFEyeshot.Entity
             OnEntityChanged?.Invoke(this.View, null);
         }
 
-        private void NotifyPointChanged(object sender, TransformedEventArgs e)
+        private void NotifyPointChanged(object sender, TransformingEventArgs e)
         {
             View.Parent = null;
             View.Dispose();

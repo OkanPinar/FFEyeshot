@@ -867,7 +867,7 @@ namespace FFEyeshot.Entity
         [Xceed.Wpf.Toolkit.PropertyGrid.Attributes.ExpandableObject]
         public ProfilePosition Position { get; set; } = new ProfilePosition();
 
-        public event TransformingEventHandler OnTransforming;
+        public event TransformedEventHandler OnTransformed;
         public event EntityChangedEventHandler OnEntityChanged;
 
         public object Parent { get; set; }
@@ -914,7 +914,7 @@ namespace FFEyeshot.Entity
             Position.pAllign = new PointT(MidPoint);
             //Position.InitializePlanes();
             Position.InitPoints();
-            Position.pAllign.OnTransforming += NotifyTransformation;
+            Position.pAllign.OnTransformed += NotifyTransformation;
         }        
 
         private void InitVectors()
@@ -976,6 +976,7 @@ namespace FFEyeshot.Entity
         public override void TransformBy(Transformation transform)
         {
             base.TransformBy(transform);
+            OnTransformed?.Invoke(this, new TransformingEventArgs(transform));
             OnEntityChanged?.Invoke(this, null);
         }
 

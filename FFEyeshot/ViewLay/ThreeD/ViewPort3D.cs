@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using devDept.Eyeshot;
 using devDept.Geometry;
 
@@ -12,6 +13,10 @@ namespace FFEyeshot.ViewLay.ThreeD
     [ToolboxItem(true)]
     public partial class ViewPort3D: ViewportLayout, INotifyPropertyChanging, INotifyPropertyChanged
     {
+        
+
+
+
         public event PropertyChangingEventHandler PropertyChanging;
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -72,7 +77,7 @@ namespace FFEyeshot.ViewLay.ThreeD
             }
         }
 
-        private void NotifyEntityChanged(object sender, Common.EntityChangedEventArgs e)
+        /*private void NotifyEntityChanged(object sender, Common.EntityChangedEventArgs e)
         {
             var entity = sender as devDept.Eyeshot.Entities.Entity;
             entity.Regen(0.0);
@@ -80,8 +85,7 @@ namespace FFEyeshot.ViewLay.ThreeD
             entity.Compile(new CompileParams(this));
             Refresh();
             Invalidate();
-            //throw new NotImplementedException();
-        }
+        }*/
 
         protected override void DrawOverlay(DrawSceneParams data)
         {
@@ -104,6 +108,45 @@ namespace FFEyeshot.ViewLay.ThreeD
         {
             this.PaintBackBuffer();
             this.SwapBuffers();
+        }
+
+        public void NotifyEntityChanged(object sender, Common.EntityChangedEventArgs e)
+        {
+            if (sender is devDept.Eyeshot.Entities.Entity entity)
+            {
+                entity.Regen(0.0);
+                entity.Compile(new CompileParams(this));
+                Entities.UpdateBoundingBox();
+                Invalidate();
+            }
+
+            else if (sender is Block block)
+            {
+                var compileParam = new CompileParams(this);
+                block.Compile(compileParam);
+                var blockRefs = Entities.Where(item => item is devDept.Eyeshot.Entities.BlockReference);
+                
+
+                string blockName = Blocks.First(item => item.Value == block).Key;
+
+                foreach (var blockRef in blockRefs)
+                {
+                    if (((devDept.Eyeshot.Entities.BlockReference)blockRef).BlockName == blockName)
+                    {
+                        blockRef.Compile(compileParam);
+                        blockRef.UpdateBoundingBox(new TraversalParams(null, this));
+                    }
+                }
+                
+                Entities.UpdateBoundingBox();
+                Camera.UpdateLocation();
+                Invalidate();
+            }
+
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
     }
