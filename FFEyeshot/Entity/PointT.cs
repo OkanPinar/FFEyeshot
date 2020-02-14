@@ -77,5 +77,10 @@ namespace FFEyeshot.Entity
             }
             this[Count - 1].TransformBy(xform);
         }
+
+        public Point3D Average()
+        {
+            return this.ToArray().AveragePoint();
+        }
     }
 }

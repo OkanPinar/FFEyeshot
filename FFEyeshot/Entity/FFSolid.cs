@@ -12,7 +12,7 @@ using devDept.Eyeshot;
 namespace FFEyeshot.Entity
 {
     [Serializable]
-    public class HybridSolid : Solid
+    public class FFSolid : Solid
     {
         public object Parent { get; set; }
 
@@ -21,12 +21,12 @@ namespace FFEyeshot.Entity
 
         private EntityGraphicsData wireGraphicsData = new EntityGraphicsData();
 
-        public HybridSolid(): base()
+        public FFSolid(): base()
         { 
 
         }
 
-        public HybridSolid(HybridSolid another): base(another)
+        public FFSolid(FFSolid another): base(another)
         {
             wireVertices = new Point3D[another.wireVertices.Length];
             for (int i = 0; i < wireVertices.Length; i++)
@@ -183,7 +183,7 @@ namespace FFEyeshot.Entity
 
         public override object Clone()
         {
-            return new HybridSolid(this);
+            return new FFSolid(this);
         }
 
         protected override bool AllVerticesInFrustum(FrustumParams data)

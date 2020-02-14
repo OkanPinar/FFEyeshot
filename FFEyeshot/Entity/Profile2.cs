@@ -686,7 +686,7 @@ namespace FFEyeshot.Entity
         /// <summary>
         /// Solid view of the cross-section
         /// </summary>
-        public HybridSolid View { get; private set; }
+        public FFSolid View { get; private set; }
 
         private ProfilePosition2 _position;
 
@@ -763,7 +763,7 @@ namespace FFEyeshot.Entity
             Point3D bboxMid = (CrossSection.BoxMax + CrossSection.BoxMin) / 2.0;
             CrossSection.Translate(-bboxMid.X, -bboxMid.Y, bboxMid.Z);
 
-            View = CrossSection.ExtrudeAsSolid<HybridSolid>(length * Vector3D.AxisZ, 0.01);
+            View = CrossSection.ExtrudeAsSolid<FFSolid>(length * Vector3D.AxisZ, 0.01);
             View.Rotate(Position.SectionRotation.ToRadian(), Vector3D.AxisZ);
 
             var wirePnts = new List<Point3D>();

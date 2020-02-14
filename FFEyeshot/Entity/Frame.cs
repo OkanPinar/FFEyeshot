@@ -15,7 +15,7 @@ namespace FFEyeshot.Entity
     public class ProfilePosition2 : INotifyPropertyChanged
     {
         #region Properties
-        public Profile Parent { get; set; }
+        public Frame Parent { get; set; }
         public Plane lcrMiddle { get; set; }
         public Plane lcrLeft { get; set; }
         public Plane lcrRight { get; set; }
@@ -421,7 +421,7 @@ namespace FFEyeshot.Entity
 
         public List<Solid> allingPntsRepresenter = new List<Solid>();
 
-        public Profile Parent { get; set; }
+        public Frame Parent { get; set; }
 
         public Point3D[,] allignPnts = new Point3D[3,3];
         public PointT pAllign { get; set; }
@@ -811,7 +811,7 @@ namespace FFEyeshot.Entity
         }
     }
 
-    public class Profile: Solid, INotifyTransformation, INotifyEntityChanged, IFFEntity
+    public class Frame: Solid, INotifyTransformation, INotifyEntityChanged, IFFEntity
     {
         #region props
         private PointT _startPoint;
@@ -874,17 +874,17 @@ namespace FFEyeshot.Entity
         #endregion
 
         #region ctors
-        public Profile(): base()
+        public Frame(): base()
         {
 
         }
 
-        public Profile(brepType bType, TextureMappingData textureData, IList<Portion> portions): base(bType, textureData, portions)
+        public Frame(brepType bType, TextureMappingData textureData, IList<Portion> portions): base(bType, textureData, portions)
         {
 
         }
 
-        public Profile(PointT startPoint, PointT endPoint, Region crossSection): base()
+        public Frame(PointT startPoint, PointT endPoint, Region crossSection): base()
         {
             this._startPoint = startPoint;
             this._endPoint = endPoint;
@@ -956,13 +956,13 @@ namespace FFEyeshot.Entity
             }
         }
 
-        public static Profile Create(Region crossSection, Point3D startPoint, Point3D endPoint)
+        public static Frame Create(Region crossSection, Point3D startPoint, Point3D endPoint)
         {
             crossSection.Regen(0.0);
             Point3D bboxMid = (crossSection.BoxMax + crossSection.BoxMin) / 2.0;
             crossSection.Translate(-bboxMid.X, -bboxMid.Y, bboxMid.Z);
 
-            Profile profile = crossSection.ExtrudeAsSolid<Profile>(Vector3D.AxisZ * startPoint.DistanceTo(endPoint), 0.1);
+            Frame profile = crossSection.ExtrudeAsSolid<Frame>(Vector3D.AxisZ * startPoint.DistanceTo(endPoint), 0.1);
             profile._crossSection = crossSection;
             profile._startPoint = new PointT(startPoint);
             profile._endPoint = new PointT(endPoint);
@@ -1002,5 +1002,41 @@ namespace FFEyeshot.Entity
             }
             return ret;
         }
+    }
+
+    public class Frame2
+    {
+        private CrossSection _section;
+
+        public CrossSection Section
+        {
+            get { return _section; }
+            set { _section = value; }
+        }
+
+        private PointT _startPoint;
+
+        public PointT StartPoint
+        {
+            get { return _startPoint; }
+            set { _startPoint = value; }
+        }
+
+        private PointT _ednPoint;
+
+        public PointT EndPoint
+        {
+            get { return _ednPoint; }
+            set { _ednPoint = value; }
+        }
+
+        public PointT MidPoint { get; private set; }
+
+        public Vector3D V1 { get; set; }
+        public Vector3D V2 { get; set; }
+        public Vector3D V3 { get; set; }
+
+        public Vector3D V2Current { get; set; }
+        public Vector3D V3Current { get; set; }
     }
 }

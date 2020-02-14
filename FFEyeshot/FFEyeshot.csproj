@@ -91,9 +91,9 @@
     <Compile Include="Entity\BlockMy.cs" />
     <Compile Include="Entity\CrossSection.cs" />
     <Compile Include="Entity\IFFEntity.cs" />
-    <Compile Include="Entity\HybridSolid.cs" />
+    <Compile Include="Entity\FFSolid.cs" />
     <Compile Include="Entity\PolygonalPlate.cs" />
-    <Compile Include="Entity\Profile.cs" />
+    <Compile Include="Entity\Frame.cs" />
     <Compile Include="Entity\RectangularPlate.cs" />
     <Compile Include="Helper\ProfileHelper.cs" />
     <Compile Include="ViewLay\ThreeD\Command\CreateEntity.cs" />
